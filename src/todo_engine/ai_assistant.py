@@ -47,9 +47,9 @@ class TodoAIAssistant:
                 return self._handle_complete_task(params)
             else:
                 return {
-                    "status": "error", 
+                    "status": "error",
                     "error": {
-                        "error_code": "UNKNOWN_INTENT", 
+                        "error_code": "UNKNOWN_INTENT",
                         "message": f"Could not understand the intent: {intent}"
                     }
                 }
@@ -58,7 +58,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "PROCESSING_ERROR", 
+                    "error_code": "PROCESSING_ERROR",
                     "message": str(e)
                 }
             }
@@ -88,9 +88,21 @@ class TodoAIAssistant:
             r'(my|the)\s*(tasks|todos|to-dos)'
         ]
 
+        # Enhanced update patterns to capture specific field updates
         update_patterns = [
             r'(update|change|rename|edit|modify)\s+(the\s+)?(.*)',
             r'(update|change|rename|edit|modify)\s+(.*)'
+        ]
+
+        # Enhanced patterns for specific field updates
+        update_title_patterns = [
+            r'(update|change|rename|edit|modify)\s+(the\s+)?title\s+of\s+(.*)\s+to\s+(.*)',
+            r'(update|change|rename|edit|modify)\s+(.*)\s+(title|name)\s+to\s+(.*)',
+        ]
+
+        update_description_patterns = [
+            r'(update|change|edit|modify)\s+(the\s+)?description\s+of\s+(.*)\s+to\s+(.*)',
+            r'(update|change|edit|modify)\s+(.*)\s+description\s+to\s+(.*)',
         ]
 
         delete_patterns = [
@@ -103,35 +115,24 @@ class TodoAIAssistant:
             r'(mark|complete|finish|done|toggle|accomplish)\s+(.*)'
         ]
 
-        user_input_lower = user_input.lower().strip()
+        # Check for specific field updates first
+        for pattern in update_title_patterns:
+            match = re.search(pattern, user_input_lower)
+            if match:
+                groups = match.groups()
+                if len(groups) >= 3:
+                    task_identifier = groups[1] if groups[0] == 'title' else groups[0]  # Determine which group contains task identifier
+                    new_title = groups[2]  # The new title
+                    return "update_task", {"task_info": task_identifier.strip(), "title": new_title.strip()}
 
-        # Intent patterns
-        create_patterns = [
-            r'(add|create|make|new)\s+(a\s+)?(task|todo|to-do)\s+(to|called|named)?\s*(.*)',
-            r'(add|create|make|new)\s+(a\s+)?(task|todo|to-do):\s*(.*)',
-            r'(add|create|make|new)\s+(.*)'
-        ]
-
-        view_patterns = [
-            r'(show|display|list|view|see|what)\s+(are|is|do)\s+(my|the)\s*(tasks|todos|to-dos|things|items|needed|todo)',
-            r'(show|display|list|view|see|what)\s+(are|is|do)\s+(i|I)\s*(need|have|to\s+do|to\s+complete)',
-            r'(my|the)\s*(tasks|todos|to-dos)'
-        ]
-
-        update_patterns = [
-            r'(update|change|rename|edit|modify)\s+(the\s+)?(.*)',
-            r'(update|change|rename|edit|modify)\s+(.*)'
-        ]
-
-        delete_patterns = [
-            r'(delete|remove|erase|eliminate)\s+(the\s+)?(.*)',
-            r'(delete|remove|erase|eliminate)\s+(.*)'
-        ]
-
-        complete_patterns = [
-            r'(mark|complete|finish|done|toggle|accomplish)\s+(the\s+)?(.*)',
-            r'(mark|complete|finish|done|toggle|accomplish)\s+(.*)'
-        ]
+        for pattern in update_description_patterns:
+            match = re.search(pattern, user_input_lower)
+            if match:
+                groups = match.groups()
+                if len(groups) >= 3:
+                    task_identifier = groups[1] if groups[0] == 'description' else groups[0]  # Determine which group contains task identifier
+                    new_description = groups[2]  # The new description
+                    return "update_task", {"task_info": task_identifier.strip(), "description": new_description.strip()}
 
         # Check for create task intent
         for pattern in create_patterns:
@@ -161,7 +162,7 @@ class TodoAIAssistant:
             if match:
                 return "view_tasks", {}
 
-        # Check for update task intent
+        # Check for update task intent (general update)
         for pattern in update_patterns:
             match = re.search(pattern, user_input_lower)
             if match:
@@ -203,7 +204,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "MISSING_TITLE", 
+                    "error_code": "MISSING_TITLE",
                     "message": "Title is required for creating a task"
                 }
             }
@@ -213,15 +214,15 @@ class TodoAIAssistant:
             return {
                 "status": "success",
                 "data": {
-                    "message": f"[ADDED] Task '{result['title']}' has been added.",
+                    "message": f"[ADDED] Task '{result['title']}' has been added successfully with ID: {result['id'][:8]}... (created at {result['created_at']}).",
                     "task": result
                 }
             }
         except ValueError as e:
             return {
-                "status": "error", 
+                "status": "error",
                 "error": {
-                    "error_code": "VALIDATION_ERROR", 
+                    "error_code": "VALIDATION_ERROR",
                     "message": str(e)
                 }
             }
@@ -229,7 +230,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "CREATE_TASK_ERROR", 
+                    "error_code": "CREATE_TASK_ERROR",
                     "message": str(e)
                 }
             }
@@ -256,10 +257,17 @@ class TodoAIAssistant:
                     }
                 }
 
+            # Format the task list for better readability
+            task_list = []
+            for i, task in enumerate(tasks):
+                status = "✓" if task["completed"] else "○"
+                task_list.append(f"  {i+1}. [{status}] {task['title']} (ID: {task['id'][:8]}...)")
+
+            task_summary = "\n".join(task_list)
             return {
                 "status": "success",
                 "data": {
-                    "message": f"[TASKS] You have {len(tasks)} task(s) in your list.",
+                    "message": f"[TASKS] You have {len(tasks)} task(s) in your list:\n{task_summary}",
                     "tasks": tasks
                 }
             }
@@ -267,7 +275,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "VIEW_TASKS_ERROR", 
+                    "error_code": "VIEW_TASKS_ERROR",
                     "message": str(e)
                 }
             }
@@ -319,12 +327,20 @@ class TodoAIAssistant:
         title = params.get("title")
         description = params.get("description")
 
+        # Track what will be updated for the response message
+        updates = []
+        if title is not None:
+            updates.append(f"title to '{title}'")
+        if description is not None:
+            updates.append(f"description to '{description}'")
+
         try:
             result = self.mcp_tools.update_task(task_id, title, description)
+            update_details = " and ".join(updates) if updates else "task"
             return {
                 "status": "success",
                 "data": {
-                    "message": f"[UPDATED] Task '{result['title']}' has been updated.",
+                    "message": f"[UPDATED] {update_details.capitalize()} for task '{result['title']}' (ID: {result['id'][:8]}...) has been updated at {result['updated_at']}.",
                     "task": result
                 }
             }
@@ -332,7 +348,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "VALIDATION_ERROR", 
+                    "error_code": "VALIDATION_ERROR",
                     "message": str(e)
                 }
             }
@@ -340,7 +356,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "UPDATE_TASK_ERROR", 
+                    "error_code": "UPDATE_TASK_ERROR",
                     "message": str(e)
                 }
             }
@@ -386,13 +402,14 @@ class TodoAIAssistant:
 
         # Delete the first matching task
         task_id = matching_tasks[0]["id"]
+        task_title = matching_tasks[0]["title"]
 
         try:
             result = self.mcp_tools.delete_task(task_id)
             return {
                 "status": "success",
                 "data": {
-                    "message": f"[DELETED] Task has been deleted.",
+                    "message": f"[DELETED] Task '{task_title}' (ID: {task_id[:8]}...) has been deleted successfully.",
                     "result": result
                 }
             }
@@ -400,7 +417,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "VALIDATION_ERROR", 
+                    "error_code": "VALIDATION_ERROR",
                     "message": str(e)
                 }
             }
@@ -408,7 +425,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "DELETE_TASK_ERROR", 
+                    "error_code": "DELETE_TASK_ERROR",
                     "message": str(e)
                 }
             }
@@ -454,6 +471,7 @@ class TodoAIAssistant:
 
         # Complete the first matching task
         task_id = matching_tasks[0]["id"]
+        task_title = matching_tasks[0]["title"]
 
         try:
             result = self.mcp_tools.complete_task(task_id)
@@ -461,7 +479,7 @@ class TodoAIAssistant:
             return {
                 "status": "success",
                 "data": {
-                    "message": f"[COMPLETED] Task '{result['title']}' has been {status}.",
+                    "message": f"[COMPLETED] Task '{task_title}' (ID: {result['id'][:8]}...) has been {status}. Updated at {result['updated_at']}.",
                     "task": result
                 }
             }
@@ -469,7 +487,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "VALIDATION_ERROR", 
+                    "error_code": "VALIDATION_ERROR",
                     "message": str(e)
                 }
             }
@@ -477,7 +495,7 @@ class TodoAIAssistant:
             return {
                 "status": "error",
                 "error": {
-                    "error_code": "COMPLETE_TASK_ERROR", 
+                    "error_code": "COMPLETE_TASK_ERROR",
                     "message": str(e)
                 }
             }

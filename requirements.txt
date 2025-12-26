@@ -1,0 +1,15 @@
+# Core Todo Engine - Phase I & III
+# Requirements for the CLI-based todo application with AI integration
+
+# Testing
+pytest>=7.0.0
+
+# AI Integration
+openai>=1.0.0
+
+# MCP Integration
+mcp>=1.0.0
+
+# Development tools (optional)
+black>=22.0.0  # Code formatting
+flake8>=4.0.0  # Code linting

@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 17, 24, 39;
+  --background-end-rgb: 30, 41, 59;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      rgb(var(--background-start-rgb)),
+      rgb(var(--background-end-rgb))
+    );
+}
+
+/* Enhanced styles for the dark-themed todo app */
+@layer components {
+  .todo-container {
+    @apply min-h-screen bg-gradient-to-br from-gray-900 to-slate-900 py-12 px-4 sm:px-6;
+  }
+
+  .todo-card {
+    @apply bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-auto border border-gray-700;
+  }
+
+  .todo-header {
+    @apply text-3xl font-bold text-center mb-8 text-white;
+  }
+
+  .todo-form {
+    @apply mb-8 p-6 bg-gradient-to-r from-gray-800 to-slate-800 rounded-xl shadow-lg border border-gray-700;
+  }
+
+  .todo-input {
+    @apply w-full p-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm bg-gray-700 text-white;
+  }
+
+  .todo-label {
+    @apply block text-gray-200 font-medium mb-2;
+  }
+
+  .todo-button {
+    @apply px-6 py-3 rounded-lg font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl transform hover:-translate-y-0.5;
+  }
+
+  .todo-button-primary {
+    @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700;
+  }
+
+  .todo-button-secondary {
+    @apply bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800;
+  }
+
+  .todo-button-success {
+    @apply bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700;
+  }
+
+  .todo-button-warning {
+    @apply bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700;
+  }
+
+  .todo-button-danger {
+    @apply bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700;
+  }
+
+  .todo-section-title {
+    @apply text-xl font-semibold mb-4 text-gray-200 flex items-center;
+  }
+
+  .todo-section-title::before {
+    content: '';
+    @apply w-3 h-3 rounded-full bg-indigo-500 mr-2;
+  }
+
+  .todo-task-list {
+    @apply space-y-4;
+  }
+
+  .todo-task-item {
+    @apply p-5 bg-gray-700 rounded-xl shadow-md border border-gray-600 transition-all duration-200 hover:shadow-lg;
+  }
+
+  .todo-task-item.completed {
+    @apply bg-gray-700/50 border-gray-600 bg-opacity-50;
+  }
+
+  .todo-task-title {
+    @apply text-lg font-medium text-gray-100;
+  }
+
+  .todo-task-title.completed {
+    @apply line-through text-gray-400;
+  }
+
+  .todo-task-description {
+    @apply mt-2 text-gray-300;
+  }
+
+  .todo-task-description.completed {
+    @apply line-through text-gray-500;
+  }
+
+  .todo-task-meta {
+    @apply text-xs text-gray-400 mt-3;
+  }
+
+  .todo-task-actions {
+    @apply flex justify-end space-x-2 mt-4;
+  }
+
+  .todo-task-action-btn {
+    @apply px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200 text-gray-200 bg-gray-600 hover:bg-gray-500;
+  }
+
+  .todo-empty-state {
+    @apply text-center py-12;
+  }
+
+  .todo-empty-title {
+    @apply text-xl font-semibold text-gray-300;
+  }
+
+  .todo-empty-message {
+    @apply text-gray-500 mt-2;
+  }
+
+  .todo-error-message {
+    @apply p-4 bg-red-900/30 text-red-200 rounded-lg mb-4 border border-red-800;
+  }
+
+  .todo-success-message {
+    @apply p-4 bg-green-900/30 text-green-200 rounded-lg mb-4 border border-green-800;
+  }
+
+  .todo-loading {
+    @apply text-center py-8 text-gray-400;
+  }
+
+  .todo-checkbox {
+    @apply w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-600 bg-gray-700;
+  }
+
+  .todo-input-edit {
+    @apply w-full p-2 border border-gray-600 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-700 text-white;
+  }
+}

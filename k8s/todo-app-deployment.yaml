@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-app
+  namespace: todo-phase-v
+  labels:
+    app: todo-app
+spec:
+  replicas: 2  # Initial replicas as specified in the feature requirements
+  strategy:
+    type: RollingUpdate  # Required for zero-downtime deployments
+  selector:
+    matchLabels:
+      app: todo-app
+  template:
+    metadata:
+      labels:
+        app: todo-app
+    spec:
+      containers:
+      - name: todo-app
+        image: todo-engine:phase-v  # Placeholder image name
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MCP_SERVER_URL
+          value: "http://mcp-server-service:8080"  # Internal Kubernetes DNS
+        - name: STORAGE_PATH
+          value: "/data"  # Path where PVC will be mounted
+        - name: ENVIRONMENT
+          value: "production"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: todo-secrets
+              key: openai-api-key
+        volumeMounts:
+        - name: tasks-storage
+          mountPath: /data
+        # Health checks for container readiness and liveness
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import os; exit(0 if os.path.exists('/data/tasks.json') else 1)"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import os; exit(0 if os.path.exists('/data/tasks.json') else 1)"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: tasks-storage
+        persistentVolumeClaim:
+          claimName: tasks-pvc

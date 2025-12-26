@@ -1,0 +1,141 @@
+# MCP Tool Contracts: Todo Engine
+
+## Overview
+
+This document defines the Machine Control Protocol (MCP) tool contracts for the Todo Engine application. These tools are exposed by the MCP server and consumed by the AI assistant component.
+
+## Tool Specifications
+
+### add_task
+
+**Purpose**: Add a new task to the todo list.
+
+**Input Parameters**:
+- `title` (string, required): Task title (1-255 characters)
+- `description` (string, optional): Task description (0-1000 characters)
+
+**Output**:
+```json
+{
+  "id": "string (UUID v4)",
+  "title": "string",
+  "description": "string",
+  "completed": "boolean",
+  "created_at": "string (ISO 8601 timestamp)",
+  "updated_at": "string (ISO 8601 timestamp)"
+}
+```
+
+**Errors**:
+- `INVALID_TITLE`: Title validation failed (empty or exceeds 255 characters)
+- `PERSISTENCE_WRITE_FAILED`: Failed to write to persistent storage
+
+### view_tasks
+
+**Purpose**: Retrieve all tasks in the todo list.
+
+**Input Parameters**: None
+
+**Output**:
+```json
+[
+  {
+    "id": "string (UUID v4)",
+    "title": "string",
+    "description": "string",
+    "completed": "boolean",
+    "created_at": "string (ISO 8601 timestamp)",
+    "updated_at": "string (ISO 8601 timestamp)"
+  }
+]
+```
+
+**Errors**: None (returns empty array if no tasks exist)
+
+### update_task
+
+**Purpose**: Update an existing task's details.
+
+**Input Parameters**:
+- `task_id` (string, required): UUID of the task to update
+- `title` (string, optional): New task title (1-255 characters)
+- `description` (string, optional): New task description (0-1000 characters)
+
+**Output**:
+```json
+{
+  "id": "string (UUID v4)",
+  "title": "string",
+  "description": "string",
+  "completed": "boolean",
+  "created_at": "string (ISO 8601 timestamp)",
+  "updated_at": "string (ISO 8601 timestamp)"
+}
+```
+
+**Errors**:
+- `TASK_NOT_FOUND`: Task with given ID does not exist
+- `INVALID_TITLE`: Title validation failed (empty or exceeds 255 characters)
+- `PERSISTENCE_WRITE_FAILED`: Failed to write to persistent storage
+
+### delete_task
+
+**Purpose**: Remove a task from the todo list.
+
+**Input Parameters**:
+- `task_id` (string, required): UUID of the task to delete
+
+**Output**:
+```json
+{
+  "message": "string",
+  "deleted_task_id": "string (UUID v4)"
+}
+```
+
+**Errors**:
+- `TASK_NOT_FOUND`: Task with given ID does not exist
+- `PERSISTENCE_WRITE_FAILED`: Failed to write to persistent storage
+
+### complete_task
+
+**Purpose**: Toggle the completion status of a task.
+
+**Input Parameters**:
+- `task_id` (string, required): UUID of the task to update completion status
+
+**Output**:
+```json
+{
+  "id": "string (UUID v4)",
+  "title": "string",
+  "description": "string",
+  "completed": "boolean",
+  "created_at": "string (ISO 8601 timestamp)",
+  "updated_at": "string (ISO 8601 timestamp)"
+}
+```
+
+**Errors**:
+- `TASK_NOT_FOUND`: Task with given ID does not exist
+- `PERSISTENCE_WRITE_FAILED`: Failed to write to persistent storage
+
+## Error Response Format
+
+All errors follow the standard error format:
+
+```json
+{
+  "error_code": "string",
+  "message": "Human-readable explanation"
+}
+```
+
+## Service Endpoint
+
+The MCP server is available internally within the Kubernetes cluster at:
+- Service name: `mcp-server-service`
+- Port: 8080 (default)
+- Protocol: HTTP/HTTPS
+
+The AI assistant component communicates with the MCP server using Kubernetes internal DNS resolution.
